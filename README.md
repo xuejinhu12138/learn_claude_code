@@ -1,280 +1,350 @@
-# Claude Code Source Snapshot for Security Research
+# AI Agent Development Study Guide
 
-> This repository mirrors a **publicly exposed Claude Code source snapshot** that became accessible on **March 31, 2026** through a source map exposure in the npm distribution. It is maintained for **educational, defensive security research, and software supply-chain analysis**.
-
----
-
-## Research Context
-
-This repository is maintained by a **university student** studying:
-
-- software supply-chain exposure and build artifact leaks
-- secure software engineering practices
-- agentic developer tooling architecture
-- defensive analysis of real-world CLI systems
-
-This archive is intended to support:
-
-- educational study
-- security research practice
-- architecture review
-- discussion of packaging and release-process failures
-
-It does **not** claim ownership of the original code, and it should not be interpreted as an official Anthropic repository.
+> Learn how to build production-grade AI agents by studying Claude Code's architecture
 
 ---
 
-## How the Public Snapshot Became Accessible
+## About This Study Guide
 
-[Chaofan Shou (@Fried_rice)](https://x.com/Fried_rice) publicly noted that Claude Code source material was reachable through a `.map` file exposed in the npm package:
+This documentation provides a structured learning path for understanding AI agent development through the Claude Code codebase - a production-grade AI coding assistant that was accidentally exposed through an npm source map leak.
 
-> **"Claude code source code has been leaked via a map file in their npm registry!"**
->
-> — [@Fried_rice, March 31, 2026](https://x.com/Fried_rice/status/2038894956459290963)
-
-The published source map referenced unobfuscated TypeScript sources hosted in Anthropic's R2 storage bucket, which made the `src/` snapshot publicly downloadable.
+**What makes this unique**: Unlike toy examples or tutorials, this is real production code (~512,000 lines) from Anthropic, showing how they architect autonomous AI agents at scale.
 
 ---
 
-## Repository Scope
+## Prerequisites
 
-Claude Code is Anthropic's CLI for interacting with Claude from the terminal to perform software engineering tasks such as editing files, running commands, searching codebases, and coordinating workflows.
+Before diving in, you should have:
 
-This repository contains a mirrored `src/` snapshot for research and analysis.
+- **Strong TypeScript/JavaScript knowledge**
+- **Understanding of async/await and Promises**
+- **Basic familiarity with AI/LLM concepts** (prompts, tokens, API calls)
+- **Terminal/CLI experience**
+- **Git and npm basics**
 
-- **Public exposure identified on**: 2026-03-31
-- **Language**: TypeScript
-- **Runtime**: Bun
-- **Terminal UI**: React + [Ink](https://github.com/vadimdemedes/ink)
-- **Scale**: ~1,900 files, 512,000+ lines of code
+**Optional but helpful**:
+- React knowledge (for understanding the UI layer)
+- Experience with tool-calling LLMs (Claude, GPT-4)
+- Understanding of software architecture patterns
 
 ---
 
-## Directory Structure
+## Learning Path Overview
 
-```text
-src/
-├── main.tsx                 # Entrypoint orchestration (Commander.js-based CLI path)
-├── commands.ts              # Command registry
-├── tools.ts                 # Tool registry
-├── Tool.ts                  # Tool type definitions
-├── QueryEngine.ts           # LLM query engine
-├── context.ts               # System/user context collection
-├── cost-tracker.ts          # Token cost tracking
-│
-├── commands/                # Slash command implementations (~50)
-├── tools/                   # Agent tool implementations (~40)
-├── components/              # Ink UI components (~140)
-├── hooks/                   # React hooks
-├── services/                # External service integrations
-├── screens/                 # Full-screen UIs (Doctor, REPL, Resume)
-├── types/                   # TypeScript type definitions
-├── utils/                   # Utility functions
-│
-├── bridge/                  # IDE and remote-control bridge
-├── coordinator/             # Multi-agent coordinator
-├── plugins/                 # Plugin system
-├── skills/                  # Skill system
-├── keybindings/             # Keybinding configuration
-├── vim/                     # Vim mode
-├── voice/                   # Voice input
-├── remote/                  # Remote sessions
-├── server/                  # Server mode
-├── memdir/                  # Persistent memory directory
-├── tasks/                   # Task management
-├── state/                   # State management
-├── migrations/              # Config migrations
-├── schemas/                 # Config schemas (Zod)
-├── entrypoints/             # Initialization logic
-├── ink/                     # Ink renderer wrapper
-├── buddy/                   # Companion sprite
-├── native-ts/               # Native TypeScript utilities
-├── outputStyles/            # Output styling
-├── query/                   # Query pipeline
-└── upstreamproxy/           # Proxy configuration
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     LEARNING JOURNEY                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Week 1-2: Fundamentals                                    │
+│  ├─ Architecture overview                                  │
+│  ├─ Core concepts (tools, permissions, context)            │
+│  └─ Codebase navigation                                    │
+│                                                             │
+│  Week 3-4: Tool System                                     │
+│  ├─ Tool definition and schemas                            │
+│  ├─ Permission system                                      │
+│  └─ Building custom tools                                  │
+│                                                             │
+│  Week 5-6: Agent Orchestration                             │
+│  ├─ Query Engine deep-dive                                 │
+│  ├─ Tool-calling loops                                     │
+│  └─ State management                                       │
+│                                                             │
+│  Week 7-8: Advanced Patterns                               │
+│  ├─ Multi-agent systems                                    │
+│  ├─ Context management                                     │
+│  └─ MCP integration                                        │
+│                                                             │
+│  Week 9-10: Practical Projects                             │
+│  └─ Build your own agent system                            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Architecture Summary
+## Study Guide Parts
 
-### 1. Tool System (`src/tools/`)
+### [Part 1: Fundamentals](./01-fundamentals.md)
+**Time: 1-2 weeks**
 
-Every tool Claude Code can invoke is implemented as a self-contained module. Each tool defines its input schema, permission model, and execution logic.
+- What is an AI agent?
+- Claude Code architecture overview
+- Core components and their roles
+- Execution flow diagram
+- Key design patterns
 
-| Tool | Description |
-|---|---|
-| `BashTool` | Shell command execution |
-| `FileReadTool` | File reading (images, PDFs, notebooks) |
-| `FileWriteTool` | File creation / overwrite |
-| `FileEditTool` | Partial file modification (string replacement) |
-| `GlobTool` | File pattern matching search |
-| `GrepTool` | ripgrep-based content search |
-| `WebFetchTool` | Fetch URL content |
-| `WebSearchTool` | Web search |
-| `AgentTool` | Sub-agent spawning |
-| `SkillTool` | Skill execution |
-| `MCPTool` | MCP server tool invocation |
-| `LSPTool` | Language Server Protocol integration |
-| `NotebookEditTool` | Jupyter notebook editing |
-| `TaskCreateTool` / `TaskUpdateTool` | Task creation and management |
-| `SendMessageTool` | Inter-agent messaging |
-| `TeamCreateTool` / `TeamDeleteTool` | Team agent management |
-| `EnterPlanModeTool` / `ExitPlanModeTool` | Plan mode toggle |
-| `EnterWorktreeTool` / `ExitWorktreeTool` | Git worktree isolation |
-| `ToolSearchTool` | Deferred tool discovery |
-| `CronCreateTool` | Scheduled trigger creation |
-| `RemoteTriggerTool` | Remote trigger |
-| `SleepTool` | Proactive mode wait |
-| `SyntheticOutputTool` | Structured output generation |
+**Outcome**: Understand the big picture and how all pieces fit together.
 
-### 2. Command System (`src/commands/`)
+---
 
-User-facing slash commands invoked with `/` prefix.
+### [Part 2: Tool System Deep-Dive](./02-tool-system.md)
+**Time: 2 weeks**
 
-| Command | Description |
-|---|---|
-| `/commit` | Create a git commit |
-| `/review` | Code review |
-| `/compact` | Context compression |
-| `/mcp` | MCP server management |
-| `/config` | Settings management |
-| `/doctor` | Environment diagnostics |
-| `/login` / `/logout` | Authentication |
-| `/memory` | Persistent memory management |
-| `/skills` | Skill management |
-| `/tasks` | Task management |
-| `/vim` | Vim mode toggle |
-| `/diff` | View changes |
-| `/cost` | Check usage cost |
-| `/theme` | Change theme |
-| `/context` | Context visualization |
-| `/pr_comments` | View PR comments |
-| `/resume` | Restore previous session |
-| `/share` | Share session |
-| `/desktop` | Desktop app handoff |
-| `/mobile` | Mobile app handoff |
+- Tool anatomy and structure
+- Schema definition with Zod
+- Permission system architecture
+- Tool execution lifecycle
+- Building your first tool
 
-### 3. Service Layer (`src/services/`)
+**Outcome**: Build custom tools and understand the tool-calling pattern.
 
-| Service | Description |
-|---|---|
-| `api/` | Anthropic API client, file API, bootstrap |
-| `mcp/` | Model Context Protocol server connection and management |
-| `oauth/` | OAuth 2.0 authentication flow |
-| `lsp/` | Language Server Protocol manager |
-| `analytics/` | GrowthBook-based feature flags and analytics |
-| `plugins/` | Plugin loader |
-| `compact/` | Conversation context compression |
-| `policyLimits/` | Organization policy limits |
-| `remoteManagedSettings/` | Remote managed settings |
-| `extractMemories/` | Automatic memory extraction |
-| `tokenEstimation.ts` | Token count estimation |
-| `teamMemorySync/` | Team memory synchronization |
+---
 
-### 4. Bridge System (`src/bridge/`)
+### [Part 3: Agent Orchestration](./03-orchestration.md)
+**Time: 2 weeks**
 
-A bidirectional communication layer connecting IDE extensions (VS Code, JetBrains) with the Claude Code CLI.
+- QueryEngine architecture
+- The tool-calling loop
+- Streaming and real-time updates
+- Error handling and retries
+- Context window management
 
-- `bridgeMain.ts` — Bridge main loop
-- `bridgeMessaging.ts` — Message protocol
-- `bridgePermissionCallbacks.ts` — Permission callbacks
-- `replBridge.ts` — REPL session bridge
-- `jwtUtils.ts` — JWT-based authentication
-- `sessionRunner.ts` — Session execution management
+**Outcome**: Understand how to orchestrate AI-driven workflows.
 
-### 5. Permission System (`src/hooks/toolPermission/`)
+---
 
-Checks permissions on every tool invocation. Either prompts the user for approval/denial or automatically resolves based on the configured permission mode (`default`, `plan`, `bypassPermissions`, `auto`, etc.).
+### [Part 4: Advanced Patterns](./04-advanced-patterns.md)
+**Time: 2 weeks**
 
-### 6. Feature Flags
+- Multi-agent coordination
+- Sub-agent spawning
+- Context compression
+- MCP (Model Context Protocol)
+- Plugin architecture
+- Memory systems
 
-Dead code elimination via Bun's `bun:bundle` feature flags:
+**Outcome**: Build complex multi-agent systems.
 
-```typescript
-import { feature } from 'bun:bundle'
+---
 
-// Inactive code is completely stripped at build time
-const voiceCommand = feature('VOICE_MODE')
-  ? require('./commands/voice/index.js').default
-  : null
+### [Part 5: Practical Exercises](./05-exercises.md)
+**Time: 2+ weeks**
+
+- Hands-on coding exercises
+- Progressive projects (beginner → advanced)
+- Building a complete agent from scratch
+- Best practices and patterns
+
+**Outcome**: Apply your knowledge to build production-quality agents.
+
+---
+
+## Quick Start Guide
+
+### 1. Clone and Explore
+
+```bash
+# This repo is already cloned
+cd /Users/ahmedkhaled/claude-code
+
+# Explore the structure
+tree -L 2 src/  # or use 'ls -R src/ | head -50'
 ```
 
-Notable flags: `PROACTIVE`, `KAIROS`, `BRIDGE_MODE`, `DAEMON`, `VOICE_MODE`, `AGENT_TRIGGERS`, `MONITOR_TOOL`
+### 2. Essential Files to Bookmark
 
----
+Create bookmarks for these core files:
 
-## Key Files in Detail
+```
+Essential Reading:
+├── src/Tool.ts              # Tool type definitions
+├── src/tools.ts             # Tool registry
+├── src/QueryEngine.ts       # Agent orchestration engine
+├── src/main.tsx             # Entry point
+└── README.md                # Architecture overview
 
-### `QueryEngine.ts` (~46K lines)
+Example Tools (Start Here):
+├── src/tools/BashTool/
+├── src/tools/FileReadTool/
+└── src/tools/AskUserQuestionTool/
 
-The core engine for LLM API calls. Handles streaming responses, tool-call loops, thinking mode, retry logic, and token counting.
-
-### `Tool.ts` (~29K lines)
-
-Defines base types and interfaces for all tools — input schemas, permission models, and progress state types.
-
-### `commands.ts` (~25K lines)
-
-Manages registration and execution of all slash commands. Uses conditional imports to load different command sets per environment.
-
-### `main.tsx`
-
-Commander.js-based CLI parser and React/Ink renderer initialization. At startup, it overlaps MDM settings, keychain prefetch, and GrowthBook initialization for faster boot.
-
----
-
-## Tech Stack
-
-| Category | Technology |
-|---|---|
-| Runtime | [Bun](https://bun.sh) |
-| Language | TypeScript (strict) |
-| Terminal UI | [React](https://react.dev) + [Ink](https://github.com/vadimdemedes/ink) |
-| CLI Parsing | [Commander.js](https://github.com/tj/commander.js) (extra-typings) |
-| Schema Validation | [Zod v4](https://zod.dev) |
-| Code Search | [ripgrep](https://github.com/BurntSushi/ripgrep) |
-| Protocols | [MCP SDK](https://modelcontextprotocol.io), LSP |
-| API | [Anthropic SDK](https://docs.anthropic.com) |
-| Telemetry | OpenTelemetry + gRPC |
-| Feature Flags | GrowthBook |
-| Auth | OAuth 2.0, JWT, macOS Keychain |
-
----
-
-## Notable Design Patterns
-
-### Parallel Prefetch
-
-Startup time is optimized by prefetching MDM settings, keychain reads, and API preconnect in parallel before heavy module evaluation begins.
-
-```typescript
-// main.tsx — fired as side-effects before other imports
-startMdmRawRead()
-startKeychainPrefetch()
+Advanced (Study Later):
+├── src/tools/AgentTool/     # Sub-agents
+├── src/coordinator/         # Multi-agent systems
+└── src/services/mcp/        # MCP integration
 ```
 
-### Lazy Loading
+### 3. Set Up a Study Environment
 
-Heavy modules (OpenTelemetry, gRPC, analytics, and some feature-gated subsystems) are deferred via dynamic `import()` until actually needed.
+```bash
+# Install dependencies (if you want to run code examples)
+bun install
 
-### Agent Swarms
+# Create your own experimental directory
+mkdir -p experiments/my-first-agent
+```
 
-Sub-agents are spawned via `AgentTool`, with `coordinator/` handling multi-agent orchestration. `TeamCreateTool` enables team-level parallel work.
+### 4. Follow the Study Plan
 
-### Skill System
-
-Reusable workflows defined in `skills/` are executed through `SkillTool`. Users can add custom skills.
-
-### Plugin Architecture
-
-Built-in and third-party plugins are loaded through the `plugins/` subsystem.
+1. **Read each part sequentially** - they build on each other
+2. **Code along** - type out examples, don't just read
+3. **Do the exercises** - learning by doing is essential
+4. **Build projects** - apply concepts to real problems
 
 ---
 
-## Research / Ownership Disclaimer
+## Key Concepts You'll Learn
 
-- This repository is an **educational and defensive security research archive** maintained by a university student.
-- It exists to study source exposure, packaging failures, and the architecture of modern agentic CLI systems.
-- The original Claude Code source remains the property of **Anthropic**.
-- This repository is **not affiliated with, endorsed by, or maintained by Anthropic**.
+### 🎯 Core Agent Patterns
+
+| Concept | What You'll Learn | Where to Find It |
+|---------|-------------------|------------------|
+| **Tool Calling** | How LLMs invoke functions | `src/QueryEngine.ts` |
+| **Permission Gates** | Controlling dangerous operations | `src/hooks/toolPermission/` |
+| **Context Management** | Managing conversation state | `src/context.ts` |
+| **Streaming** | Real-time response updates | `src/QueryEngine.ts` |
+| **Error Recovery** | Handling failures gracefully | `src/QueryEngine.ts` |
+
+### 🚀 Advanced Patterns
+
+| Pattern | Description | Implementation |
+|---------|-------------|----------------|
+| **Agent Swarms** | Multiple agents working together | `src/coordinator/` |
+| **Sub-agents** | Spawning specialized agents | `src/tools/AgentTool/` |
+| **Skills** | Reusable workflows | `src/skills/` |
+| **Plugins** | Extensibility system | `src/plugins/` |
+| **MCP** | Third-party tool integration | `src/services/mcp/` |
+
+---
+
+## How to Use This Guide
+
+### For Self-Study
+
+1. **Linear approach**: Go through parts 1-5 in order
+2. **Time commitment**: ~2-3 hours per day for 10 weeks
+3. **Active learning**: Code along with every example
+4. **Projects**: Build at least 3 projects from Part 5
+
+### For University Courses
+
+This guide can support:
+
+- **CS Capstone Projects**: Build an AI agent as a semester project
+- **Software Engineering**: Study architecture patterns
+- **AI/ML Courses**: Understand practical LLM applications
+- **Security Courses**: Analyze permission systems and safety
+
+### For Team Training
+
+- **Week 1-2**: Group study of fundamentals
+- **Week 3-4**: Team builds simple tools
+- **Week 5-6**: Pair programming on agent orchestration
+- **Week 7-8**: Team project: multi-agent system
+- **Week 9-10**: Code review and presentations
+
+---
+
+## Recommended Study Schedule
+
+### Full-Time (40 hours/week)
+- **Duration**: 4-5 weeks
+- **Schedule**: 8 hours/day, deep focus
+- **Projects**: 2-3 substantial projects
+
+### Part-Time (10 hours/week)
+- **Duration**: 10-12 weeks
+- **Schedule**: 2 hours/day on weekdays
+- **Projects**: 1-2 projects
+
+### Weekend Warrior (8 hours/week)
+- **Duration**: 12-15 weeks
+- **Schedule**: Saturday + Sunday sessions
+- **Projects**: 1 comprehensive project
+
+---
+
+## Additional Resources
+
+### Official Documentation
+- [Anthropic API Docs](https://docs.anthropic.com)
+- [Model Context Protocol](https://modelcontextprotocol.io)
+- [Tool Use Guide](https://docs.anthropic.com/en/docs/build-with-claude/tool-use)
+
+### Related Technologies
+- [Bun Runtime](https://bun.sh)
+- [Ink (React for CLIs)](https://github.com/vadimdemedes/ink)
+- [Zod Schema Validation](https://zod.dev)
+- [Commander.js](https://github.com/tj/commander.js)
+
+### Further Reading
+- [Building LLM Agents (Anthropic)](https://www.anthropic.com/research/building-effective-agents)
+- [AI Agent Papers (arXiv)](https://arxiv.org/list/cs.AI/recent)
+
+---
+
+## Getting Help
+
+### Understanding the Code
+
+1. **Start with simple files**: Begin with `BashTool.js`, not `QueryEngine.ts`
+2. **Use TypeScript features**: Cmd+Click (VS Code) to navigate to definitions
+3. **Search patterns**: Use `grep -r "pattern" src/` to find examples
+4. **Read tests**: Look for `.test.ts` files for usage examples
+
+### Common Challenges
+
+| Challenge | Solution |
+|-----------|----------|
+| "Too much code!" | Start with single tools, don't read everything |
+| "Don't understand TypeScript types" | Focus on runtime behavior first, types second |
+| "Lost in the codebase" | Use the file reference guide in Part 1 |
+| "Concepts too advanced" | Build simple versions first, iterate |
+
+---
+
+## Success Metrics
+
+By the end of this guide, you should be able to:
+
+- [ ] Explain how tool-calling agents work
+- [ ] Build custom tools with proper schemas
+- [ ] Implement a basic permission system
+- [ ] Create a simple agent orchestration loop
+- [ ] Handle streaming LLM responses
+- [ ] Build a multi-agent coordinator
+- [ ] Integrate external tools via MCP
+- [ ] Deploy a production-ready agent
+
+---
+
+## Contributing to This Guide
+
+This is a living document. If you:
+
+- Find errors or outdated information
+- Want to add examples or clarifications
+- Have suggestions for improvements
+- Built something cool using this guide
+
+Feel free to submit issues or PRs!
+
+---
+
+## Legal & Ethics
+
+**Important Reminders**:
+
+- This code was accidentally exposed, not intentionally open-sourced
+- Original code remains Anthropic's property
+- Use for educational and defensive security research only
+- Do not use this to build competing commercial products
+- Respect intellectual property and licensing
+
+---
+
+## Next Steps
+
+**Ready to begin?** Start with [Part 1: Fundamentals →](./01-fundamentals.md)
+
+**Questions before starting?** Review the prerequisites and ensure you have the required background knowledge.
+
+**Want to jump ahead?** While possible, each part builds on previous concepts. Sequential learning is recommended.
+
+---
+
+**Happy learning!** 🚀
+
+*Last updated: March 31, 2026*

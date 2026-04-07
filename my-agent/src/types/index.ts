@@ -33,8 +33,13 @@ function createUserMessage(content: string): Message {
     }
 }
 
+type SendMessageResult = {
+    text: string;
+    stop_reason: string | 'stop' | 'length' | 'tool_calls' | 'error';
+}
+
 export { ContentBlockSchema, MessageSchema, RoleSchema, createUserMessage };
-export type { ContentBlock, Message };
+export type { ContentBlock, Message, SendMessageResult };
 
 // const result = MessageSchema.safeParse({
 //     role: "user",

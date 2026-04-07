@@ -4,6 +4,8 @@ import { MODEL } from './constants';
 import { initState } from './bootstrap/state';
 import { print, printDebug } from './utils/print';
 import { sendMessage } from './api';
+import * as readline from 'readline';
+import { addMessage, getHistory } from './history';
 
 const { values, positionals } = parseArgs({
     args: Bun.argv.slice(2),
@@ -29,19 +31,64 @@ Options:
   -m, --model    Model to use (default: claude-opus-4-5)
 `;
 
+process.on('SIGINT', () => {
+    print('再见！');
+    process.exit(0);
+});
+
+function prompt(rl: readline.Interface, question: string): Promise<string> {
+    return new Promise((resolve) => {
+        rl.question(question, resolve);
+    });
+}
+
 switch (positionals[0]) {
   case 'chat':    
-    const msg = await sendMessage([
-        {
-            role: "user",
-            content: [{
-                type: "text",
-                text: "用一句话介绍你自己"
-            }]
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    }).on('close', () => {
+        printDebug('再见！');
+        process.exit(0);
+    });
+    while(true) {
+        const answer = await prompt(rl, '你> ');
+        switch (answer.trim()) {
+            case '/exit':
+            case 'exit':
+            case 'quit':
+                    printDebug('再见！');
+                    rl.close();
+                    process.exit(0);
+                case '':
+                    break;
+                default:
+                    // 放入用户输入到历史记录中
+                    addMessage({
+                        role: "user",
+                        content: [{
+                            type: "text",
+                            text: answer
+                        }]
+                    });
+                    // 流式结果会直接process.stdout到控制台，完整的结果会放到history里
+                    process.stdout.write("AI> ");
+                    const res = await sendMessage(getHistory()).then(({ text, stop_reason }) => {
+                        printDebug(`stop_reason: ${stop_reason}`)
+                        // 将AI的回复也放入历史记录中
+                        addMessage({
+                            role: "assistant",
+                            content: [{
+                                type: "text",
+                                text
+                            }]
+                        });
+                    }).catch(err => {
+                        print(`Error: ${err instanceof Error ? err.message : String(err)}`)
+                    });
         }
-    ]); 
-    printDebug(`Model response: ${msg}`);
+    }
     break
   case 'version': printDebug('my-agent version 0.1.0'); break
-  default:        printDebug(helpInfo)
+  default:        printDebug(helpInfo); break
 }

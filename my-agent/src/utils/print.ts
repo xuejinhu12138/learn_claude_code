@@ -11,8 +11,6 @@ function printDebug(message: string): void {
     const state = getState();
     if (state.debug) {
         process.stderr.write(`[DEBUG] ${message}\n`);
-    }else{
-        print(message);
     }
 }
 

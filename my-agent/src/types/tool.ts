@@ -11,10 +11,15 @@ type JSONSchema = {
     required?: string[];
 }
 
-type ToolDefinition = {
+type FunctionDefinition = {
     name: string;
     description: string;
-    input_schema: JSONSchema;
+    parameters: JSONSchema;
+}
+
+type ToolDefinition = {
+    type: "function";
+    function: FunctionDefinition;
 }
 
 interface Tool {
@@ -27,9 +32,12 @@ interface Tool {
 
 function toToolDefinition(tool: Tool): ToolDefinition {
     return {
-        name: tool.name,
-        description: tool.description,
-        input_schema: tool.inputSchema,
+        type: "function",
+        function: {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.inputSchema
+        }
     };
 }
 

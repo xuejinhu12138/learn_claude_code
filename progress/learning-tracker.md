@@ -216,4 +216,4 @@
 - **2026-04-06**：Phase 0 全部完成，8/8 能力点。详见 `sessions/2026-04-06-01.md`
 - **2026-04-07**（上）：Phase 1+2 全完成，Phase 3 完成 6/9。详见 `sessions/2026-04-07-01.md`
 - **2026-04-07**（下）：Phase 3 补全（8/9，P3-9跳过），实现多轮对话、流式输出、stop_reason、重试。详见 `sessions/2026-04-07-02.md`
-- **2026-04-07**（夜）：Phase 4 完成（6/9，P4-6~P4-9跳过/合并），实现 Tool 接口、ToolRegistry、ReadFile/WriteFile/BashTool + Zod 验证，13 tests pass。
+- **2026-04-07**（晚）：Phase 4 完成（6/9，P4-6~P4-9跳过/合并），实现 Tool 接口、ToolRegistry、ReadFile/WriteFile/BashTool + Zod 验证，13 tests pass。详见 `sessions/2026-04-07-03.md`

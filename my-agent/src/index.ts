@@ -6,6 +6,11 @@ import { print, printDebug } from './utils/print';
 import { sendMessage } from './api';
 import * as readline from 'readline';
 import { addMessage, getHistory } from './history';
+import { runAgent } from './agent';
+
+
+// 将工具注册到toolRegistry里
+import '../src/tools/index';
 
 const { values, positionals } = parseArgs({
     args: Bun.argv.slice(2),
@@ -60,32 +65,10 @@ switch (positionals[0]) {
                     printDebug('再见！');
                     rl.close();
                     process.exit(0);
-                case '':
-                    break;
-                default:
-                    // 放入用户输入到历史记录中
-                    addMessage({
-                        role: "user",
-                        content: [{
-                            type: "text",
-                            text: answer
-                        }]
-                    });
-                    // 流式结果会直接process.stdout到控制台，完整的结果会放到history里
-                    process.stdout.write("AI> ");
-                    const res = await sendMessage(getHistory()).then(({ text, stop_reason }) => {
-                        printDebug(`stop_reason: ${stop_reason}`)
-                        // 将AI的回复也放入历史记录中
-                        addMessage({
-                            role: "assistant",
-                            content: [{
-                                type: "text",
-                                text
-                            }]
-                        });
-                    }).catch(err => {
-                        print(`Error: ${err instanceof Error ? err.message : String(err)}`)
-                    });
+            case '':
+                break;
+            default:
+                await runAgent(answer);
         }
     }
     break

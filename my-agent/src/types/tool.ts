@@ -11,25 +11,27 @@ type JSONSchema = {
     required?: string[];
 }
 
-type Tool = {
+type ToolDefinition = {
     name: string;
     description: string;
     input_schema: JSONSchema;
 }
 
-export type { JSONSchemaProperty, JSONSchema, Tool };
+interface Tool {
+    name: string;
+    description: string;
+    inputSchema: JSONSchema;
+    call(input: unknown): Promise<string>;
+} 
 
-const read_file: Tool = {
-    name: "read_file",
-    description: "Read the content of a file. Input should be a JSON object with a 'path' property specifying the file path.",
-    input_schema: {
-        type: "object",
-        properties: {
-            path: {
-                type: "string",
-                description: "The path of the file to read."
-            }
-        },
-        required: ["path"]
-    }
+
+function toToolDefinition(tool: Tool): ToolDefinition {
+    return {
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.inputSchema,
+    };
 }
+
+export type { JSONSchemaProperty, JSONSchema, ToolDefinition, Tool };
+export { toToolDefinition };

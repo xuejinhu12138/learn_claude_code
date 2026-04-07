@@ -1,9 +1,9 @@
 # 学习进度追踪表
 
 > **最后更新**：2026-04-07
-> **当前阶段**：Phase 4 — 工具系统
-> **当前能力点**：P4-1（Tool 接口设计）
-> **总体进度**：29 / 95 能力点（31%）
+> **当前阶段**：Phase 5 — Agentic Loop
+> **当前能力点**：P5-1（理解 Agentic Loop 概念）
+> **总体进度**：35 / 95 能力点（37%）
 
 ---
 
@@ -15,7 +15,7 @@
 | 1 | 项目骨架与基础设施 | 8 | 8 | ✅ 完成 |
 | 2 | CLI 与入口层 | 6 | 6 | ✅ 完成 |
 | 3 | 消息系统与 API 调用 | 9 | 8 | ✅ 完成（P3-9跳过） |
-| 4 | 工具系统 | 9 | 0 | ⬜ 未开始 |
+| 4 | 工具系统 | 9 | 6 | ✅ 完成（P4-6~P4-9跳过/合并） |
 | 5 | Agentic Loop | 9 | 0 | ⬜ 未开始 |
 | 6 | 终端 UI 系统 | 10 | 0 | ⬜ 未开始 |
 | 7 | 命令、技能与交互 | 8 | 0 | ⬜ 未开始 |
@@ -85,15 +85,15 @@
 
 | ID | 能力点 | 状态 | 完成日期 | 备注 |
 |----|--------|------|---------|------|
-| P4-1 | Tool 接口设计 | ⬜ 未开始 | — | — |
-| P4-2 | 工具注册表 | ⬜ 未开始 | — | — |
-| P4-3 | ReadFileTool | ⬜ 未开始 | — | — |
-| P4-4 | WriteFileTool | ⬜ 未开始 | — | — |
-| P4-5 | BashTool | ⬜ 未开始 | — | — |
-| P4-6 | 权限系统 | ⬜ 未开始 | — | — |
-| P4-7 | 工具执行引擎 | ⬜ 未开始 | — | — |
-| P4-8 | 工具结果处理 | ⬜ 未开始 | — | — |
-| P4-9 | Shell 抽象层 | ⬜ 未开始 | — | — |
+| P4-1 | Tool 接口设计 | ✅ 已完成 | 2026-04-07 | types/tool.ts：ToolDefinition/Tool/toToolDefinition |
+| P4-2 | 工具注册表 | ✅ 已完成 | 2026-04-07 | tools/registry.ts：register/get/list/toDefinitions |
+| P4-3 | ReadFileTool | ✅ 已完成 | 2026-04-07 | fs.readFileSync + Zod 验证 |
+| P4-4 | WriteFileTool | ✅ 已完成 | 2026-04-07 | fs.writeFileSync + Zod 验证 |
+| P4-5 | BashTool | ✅ 已完成 | 2026-04-07 | child_process.execSync + Zod 验证 |
+| P4-6 | 权限系统 | ⏭️ 跳过 | — | UI 交互层，Phase 6 再做 |
+| P4-7 | 工具执行引擎 | ⏭️ 跳过 | — | 合并到 Phase 5 Agentic Loop |
+| P4-8 | 工具结果处理 | ⏭️ 跳过 | — | 合并到 Phase 5 Agentic Loop |
+| P4-9 | Shell 抽象层 | ⏭️ 跳过 | — | BashTool 已满足需求 |
 
 ## 🟣 Phase 5：Agentic Loop
 
@@ -216,3 +216,4 @@
 - **2026-04-06**：Phase 0 全部完成，8/8 能力点。详见 `sessions/2026-04-06-01.md`
 - **2026-04-07**（上）：Phase 1+2 全完成，Phase 3 完成 6/9。详见 `sessions/2026-04-07-01.md`
 - **2026-04-07**（下）：Phase 3 补全（8/9，P3-9跳过），实现多轮对话、流式输出、stop_reason、重试。详见 `sessions/2026-04-07-02.md`
+- **2026-04-07**（夜）：Phase 4 完成（6/9，P4-6~P4-9跳过/合并），实现 Tool 接口、ToolRegistry、ReadFile/WriteFile/BashTool + Zod 验证，13 tests pass。

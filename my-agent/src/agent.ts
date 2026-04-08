@@ -63,7 +63,6 @@ async function runAgent(userInput: string, deps: AgentDeps = createDefaultDeps()
     deps.addMessage(createUserMessage(userInput));
     let isContinue = true;
     let turns = 0;
-    process.stdout.write("AI> ");
     while (isContinue) {
         // 2. 检查是否需要上下文压缩，调用 sendMessage 函数，传入历史记录
         let history = deps.getHistory();

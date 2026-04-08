@@ -2,8 +2,8 @@
 
 > **最后更新**：2026-04-08
 > **当前阶段**：Phase 6 — 终端 UI 系统
-> **当前能力点**：P6-1（Ink 基础）
-> **总体进度**：50 / 95 能力点（53%）
+> **当前能力点**：P6-7（权限/确认对话框）
+> **总体进度**：56 / 95 能力点（59%）
 
 ---
 
@@ -17,7 +17,7 @@
 | 3 | 消息系统与 API 调用 | 9 | 8 | ✅ 完成（P3-9跳过） |
 | 4 | 工具系统 | 9 | 6 | ✅ 完成（P4-6~P4-9跳过/合并） |
 | 5 | Agentic Loop | 9+4扩展 | 9+4 | ✅ 完成 |
-| 6 | 终端 UI 系统 | 10 | 0 | 🔄 进行中 |
+| 6 | 终端 UI 系统 | 10 | 6 | 🔄 进行中 |
 | 7 | 命令、技能与交互 | 8 | 0 | ⬜ 未开始 |
 | 8 | 持久化与会话管理 | 6 | 0 | ⬜ 未开始 |
 | 9 | 高级工具与 LSP | 5 | 0 | ⬜ 未开始 |
@@ -117,12 +117,12 @@
 
 | ID | 能力点 | 状态 | 完成日期 | 备注 |
 |----|--------|------|---------|------|
-| P6-1 | Ink 基础 | 🔄 进行中 | — | — |
-| P6-2 | 全局状态 (AppState) | ⬜ 未开始 | — | — |
-| P6-3 | React Context 层 | ⬜ 未开始 | — | — |
-| P6-4 | 消息列表组件 | ⬜ 未开始 | — | — |
-| P6-5 | 输入组件 | ⬜ 未开始 | — | — |
-| P6-6 | 流式输出组件 | ⬜ 未开始 | — | — |
+| P6-1 | Ink 基础 | ✅ 已完成 | 2026-04-08 | render/Box/Text/useInput，Rules of Hooks |
+| P6-2 | 全局状态 (AppState) | ✅ 已完成 | 2026-04-08 | Store<T> 泛型类，subscribe/set/get，export type 区别 |
+| P6-3 | React Context 层 | ✅ 已完成 | 2026-04-08 | useStore/useAppState hook，useEffect cleanup 取消订阅 |
+| P6-4 | 消息列表组件 | ✅ 已完成 | 2026-04-08 | MessageList，messages.map → JSX，useAppState 驱动重渲染 |
+| P6-5 | 输入组件 | ✅ 已完成 | 2026-04-08 | StatusBar，useInput 键盘处理，appStore.get() vs useAppState() 区别 |
+| P6-6 | 流式输出组件 | ✅ 已完成 | 2026-04-08 | runAgent 接入 UI，isLoading/streamingText，api.ts 静音改 appStore |
 | P6-7 | 权限/确认对话框 | ⬜ 未开始 | — | — |
 | P6-8 | 状态显示 | ⬜ 未开始 | — | — |
 | P6-9 | 自定义 Hooks | ⬜ 未开始 | — | — |
@@ -222,4 +222,4 @@
 - **2026-04-07**（下）：Phase 3 补全（8/9，P3-9跳过），实现多轮对话、流式输出、stop_reason、重试。详见 `sessions/2026-04-07-02.md`
 - **2026-04-07**（晚）：Phase 4 完成（6/9，P4-6~P4-9跳过/合并），实现 Tool 接口、ToolRegistry、ReadFile/WriteFile/BashTool + Zod 验证，13 tests pass。详见 `sessions/2026-04-07-03.md`
 - **2026-04-07**（深夜）：Phase 5 P5-1~P5-4 完成，实现完整 Agentic Loop；大量调试（tool_call_id、Promise.all、JSON.parse、模型切换 gemma-4-26b）。详见 `sessions/2026-04-07-04.md`
-- **2026-04-08**：P5-5 依赖注入完成（AgentDeps class，history 私有封装，fake deps 测试）；P5-7 拆分为 5 个子任务，开始 P5-7a 消息分组。
+- **2026-04-08**：P5-5~P5-9 全部完成（含 P5-6 token budget、P5-7a~e 五子任务），20 tests pass；P6-1~P6-6 完成，实现 Ink UI（Store/useAppState/MessageList/StatusBar/输入/流式输出接 agent），25 tests pass。详见 `sessions/2026-04-08-01.md`

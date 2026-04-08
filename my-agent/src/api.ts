@@ -6,6 +6,7 @@ import type { ChatCompletionContentPart, ChatCompletionMessageParam } from "open
 import { optionalEnv } from "./utils/env"
 import type { ToolCall } from "./types";
 import { toolRegistry } from "./tools/registry"
+import { appStore } from "./ui/store"
 
 function getClient(): OpenAI {
     const client = new OpenAI({
@@ -53,9 +54,10 @@ async function sendMessage(messages: Message[]): Promise<SendMessageResult> {
             });
 
             text += token;
-            process.stdout.write(token);
+            // process.stdout.write(token);
+            appStore.set(prev => ({ ...prev, streamingText: text }));
         }
-        process.stdout.write("\n");
+        // process.stdout.write("\n");
         return {
             text,
             stop_reason: finishReason ?? 'error',

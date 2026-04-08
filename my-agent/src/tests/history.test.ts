@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { addMessage, getHistory, clearHistory, getLastMessage } from './history';
+import { addMessage, getHistory, clearHistory, getLastMessage } from '../history';
 
 
 describe('测试历史消息', () => {
@@ -8,7 +8,7 @@ describe('测试历史消息', () => {
             {role: "user",
             content: [
                 { type: "text", text: "Hello, world!" },
-                { type: "tool_use", id: "1", name: "search", input: { "query": "TypeScript" } }
+                { type: "text", text: "query: TypeScript" }
             ]}
         );
         const history = getHistory();

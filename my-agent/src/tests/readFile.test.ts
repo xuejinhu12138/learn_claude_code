@@ -1,15 +1,15 @@
 import { describe, test, expect } from 'bun:test'; 
-import { toolRegistry } from './registry';
-import './readFile';
-import './writeFile';
-import './bash';
+import { toolRegistry } from '../tools/registry';
+import '../tools/index';
+import { initState } from '../bootstrap/state';
 
 describe('测试读取文件', () => {
+    initState(true);
     test('测试读取文件内容，正确', async () => {
         const tool = toolRegistry.get('read_file');
         expect(tool).toBeDefined();
         const content = await tool?.call({
-            path: "/Users/xuejinhu/Desktop/dontdelete/codes/agentic-ai-from-claude-code/my-agent/src/history.test.ts"
+            path: "/Users/xuejinhu/Desktop/dontdelete/codes/agentic-ai-from-claude-code/my-agent/src/tests/history.test.ts"
         })
         console.log(content);
         expect(content).toContain("测试历史消息");

@@ -1,9 +1,9 @@
 # 学习进度追踪表
 
-> **最后更新**：2026-04-07
-> **当前阶段**：Phase 5 — Agentic Loop
-> **当前能力点**：P5-8（系统提示词构建）
-> **总体进度**：39 / 95 能力点（41%）
+> **最后更新**：2026-04-08
+> **当前阶段**：Phase 6 — 终端 UI 系统
+> **当前能力点**：P6-1（Ink 基础）
+> **总体进度**：50 / 95 能力点（53%）
 
 ---
 
@@ -16,8 +16,8 @@
 | 2 | CLI 与入口层 | 6 | 6 | ✅ 完成 |
 | 3 | 消息系统与 API 调用 | 9 | 8 | ✅ 完成（P3-9跳过） |
 | 4 | 工具系统 | 9 | 6 | ✅ 完成（P4-6~P4-9跳过/合并） |
-| 5 | Agentic Loop | 9 | 4 | 🔄 进行中 |
-| 6 | 终端 UI 系统 | 10 | 0 | ⬜ 未开始 |
+| 5 | Agentic Loop | 9+4扩展 | 9+4 | ✅ 完成 |
+| 6 | 终端 UI 系统 | 10 | 0 | 🔄 进行中 |
 | 7 | 命令、技能与交互 | 8 | 0 | ⬜ 未开始 |
 | 8 | 持久化与会话管理 | 6 | 0 | ⬜ 未开始 |
 | 9 | 高级工具与 LSP | 5 | 0 | ⬜ 未开始 |
@@ -103,17 +103,21 @@
 | P5-2 | 实现基本循环 | ✅ 已完成 | 2026-04-07 | agent.ts runAgent()，while 循环 + stop_reason switch |
 | P5-3 | 多工具处理 | ✅ 已完成 | 2026-04-07 | Promise.all 并行调用，tool_call_id 对应回填 |
 | P5-4 | 终止条件 | ✅ 已完成 | 2026-04-07 | MAX_TURNS 常量，error/default 兜底 break |
-| P5-5 | 依赖注入 (QueryDeps) | ⬜ 未开始 | — | — |
-| P5-6 | Token 预算 (BudgetTracker) | ⏭️ 跳过 | — | 本地 LLM 意义不大 |
-| P5-7 | 上下文压缩 (Compact) | ⬜ 未开始 | — | — |
-| P5-8 | 系统提示词构建 | ⬜ 未开始 | — | — |
-| P5-9 | 端到端验证 | ⬜ 未开始 | — | — |
+| P5-5 | 依赖注入 (AgentDeps) | ✅ 已完成 | 2026-04-08 | AgentDeps class，history 私有封装，fake deps 测试通过 |
+| P5-6 | Token 预算 (tokenEstimation) | ✅ 已完成 | 2026-04-08 | estimateMessageTokens/estimateHistoryTokens，char/3.5+4 |
+| P5-7a | 上下文压缩 — 消息分组 (grouping) | ✅ 已完成 | 2026-04-08 | groupMessagesByApiRound，遇 assistant 开新组 |
+| P5-7b | 上下文压缩 — MicroCompact（工具结果截断） | ✅ 已完成 | 2026-04-08 | 零 LLM 调用，截断过长 tool result，structuredClone |
+| P5-7c | 上下文压缩 — LLM 摘要压缩 | ✅ 已完成 | 2026-04-08 | 三分区结构，grouping 保证 tail 完整，调 LLM 生成摘要 |
+| P5-7d | 上下文压缩 — AutoCompact（自动触发） | ✅ 已完成 | 2026-04-08 | Token 阈值检测，consecutiveFailures 电路断路器（MAX=3） |
+| P5-7e | 上下文压缩 — 警告 Hook | ✅ 已完成 | 2026-04-08 | compactWarning，token 超警告阈值时回调，warningIssued 去重 |
+| P5-8 | 系统提示词构建 | ✅ 已完成 | 2026-04-08 | buildSystemPrompt，cwd+datetime+tools+memory 组装 |
+| P5-9 | 端到端验证 | ✅ 已完成 | 2026-04-08 | index.ts 集成所有组件，runAgent 主循环 warn+compact+micro |
 
 ## 🔷 Phase 6：终端 UI 系统
 
 | ID | 能力点 | 状态 | 完成日期 | 备注 |
 |----|--------|------|---------|------|
-| P6-1 | Ink 基础 | ⬜ 未开始 | — | — |
+| P6-1 | Ink 基础 | 🔄 进行中 | — | — |
 | P6-2 | 全局状态 (AppState) | ⬜ 未开始 | — | — |
 | P6-3 | React Context 层 | ⬜ 未开始 | — | — |
 | P6-4 | 消息列表组件 | ⬜ 未开始 | — | — |
@@ -218,3 +222,4 @@
 - **2026-04-07**（下）：Phase 3 补全（8/9，P3-9跳过），实现多轮对话、流式输出、stop_reason、重试。详见 `sessions/2026-04-07-02.md`
 - **2026-04-07**（晚）：Phase 4 完成（6/9，P4-6~P4-9跳过/合并），实现 Tool 接口、ToolRegistry、ReadFile/WriteFile/BashTool + Zod 验证，13 tests pass。详见 `sessions/2026-04-07-03.md`
 - **2026-04-07**（深夜）：Phase 5 P5-1~P5-4 完成，实现完整 Agentic Loop；大量调试（tool_call_id、Promise.all、JSON.parse、模型切换 gemma-4-26b）。详见 `sessions/2026-04-07-04.md`
+- **2026-04-08**：P5-5 依赖注入完成（AgentDeps class，history 私有封装，fake deps 测试）；P5-7 拆分为 5 个子任务，开始 P5-7a 消息分组。

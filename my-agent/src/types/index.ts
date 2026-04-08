@@ -40,6 +40,17 @@ function createUserMessage(content: string): Message {
     }
 }
 
+function createUserMessages(content: string[]): Message {
+    return {
+        role: "user",
+        content: content.map(text => ({
+            type: "text",
+            text
+        }))
+    }
+}
+
+
 function createSystemMessage(content: string): Message {
     return {
         role: "system",
@@ -78,7 +89,7 @@ type SendMessageResult = {
     tool_use: ToolCall[];
 }
 
-export { ContentBlockSchema, MessageSchema, RoleSchema, createUserMessage, createToolMessage, createSystemMessage, createAssistantMessage };
+export { ContentBlockSchema, MessageSchema, RoleSchema, createUserMessage, createToolMessage, createSystemMessage, createAssistantMessage, createUserMessages };
 export type { ContentBlock, Message, SendMessageResult, ToolCall };
 
 // const result = MessageSchema.safeParse({

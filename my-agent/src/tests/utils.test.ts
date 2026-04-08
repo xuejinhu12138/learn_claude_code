@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { clamp, truncate } from './utils';
+import { clamp, truncate } from '../utils';
 
 describe('测试', () => {
     test('测试函数clamp', () => {

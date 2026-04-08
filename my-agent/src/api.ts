@@ -1,6 +1,6 @@
 import OpenAI from "openai"
 import { getState } from "./bootstrap/state"
-import { API_BASE_URL, DEFAULT_BASE_URL, MAX_TOKENS, MODEL, SYSTEM_PROMPT } from "./constants"
+import { API_BASE_URL, DEFAULT_BASE_URL, MAX_TOKENS, MODEL } from "./constants"
 import { createSystemMessage, type Message, type SendMessageResult } from "./types"
 import type { ChatCompletionContentPart, ChatCompletionMessageParam } from "openai/resources/chat/completions/completions.js"
 import { optionalEnv } from "./utils/env"
@@ -18,10 +18,7 @@ function getClient(): OpenAI {
 
 async function sendMessage(messages: Message[]): Promise<SendMessageResult> {
 
-    const systemMessage: Message = createSystemMessage(SYSTEM_PROMPT);
-    const copyMessage = [
-        systemMessage,
-        ...messages]
+    const copyMessage = structuredClone(messages);
     const convertMsg = copyMessage as ChatCompletionMessageParam[];
     const client = getClient();
     let text = "";

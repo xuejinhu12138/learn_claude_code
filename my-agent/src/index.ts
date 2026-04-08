@@ -7,10 +7,13 @@ import { sendMessage } from './api';
 import * as readline from 'readline';
 import { addMessage, getHistory } from './history';
 import { runAgent } from './agent';
-
+import { createDefaultDeps } from './agent';
 
 // 将工具注册到toolRegistry里
 import '../src/tools/index';
+import { createSystemMessage } from './types';
+import { buildSystemPrompt } from './utils/buildSystemPrompt';
+import { toolRegistry } from './tools/registry';
 
 const { values, positionals } = parseArgs({
     args: Bun.argv.slice(2),
@@ -56,6 +59,7 @@ switch (positionals[0]) {
         printDebug('再见！');
         process.exit(0);
     });
+    const deps = createDefaultDeps();
     while(true) {
         const answer = await prompt(rl, '你> ');
         switch (answer.trim()) {
@@ -68,7 +72,13 @@ switch (positionals[0]) {
             case '':
                 break;
             default:
-                await runAgent(answer);
+                const systemPrompt = buildSystemPrompt({
+                    cwd: process.cwd(),
+                    datetime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+                    tools: toolRegistry.list(),
+                });
+                deps.addMessage(createSystemMessage(systemPrompt));
+                await runAgent(answer, deps);
         }
     }
     break

@@ -1,4 +1,4 @@
-import { withRetry } from "./utils/retry";
+import { withRetry } from "../utils/retry";
 import { describe, test, expect } from "bun:test";
 
 describe('测试', () => {

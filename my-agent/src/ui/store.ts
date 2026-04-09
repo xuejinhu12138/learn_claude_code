@@ -35,13 +35,22 @@ type AppState = {
     isLoading: boolean  // 是否正在等待 AI 回复（发送消息后到收到回复前的状态）
     inputValue: string  // 输入框当前内容
     streamingText: string  // 正在流式生成的文本
+
+    // 确认对话框状态
+    pendingConfirmation?: {
+        message: string;
+        onConfirm: () => void;
+        onCancel: () => void;
+    }
 }
 
 const appStore = new Store<AppState>({
     messages: [],
     isLoading: false,
     inputValue: "",
-    streamingText: ""
+    streamingText: "",
+
+    pendingConfirmation: undefined,
 });
 
 export { appStore, Store };

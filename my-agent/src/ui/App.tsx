@@ -10,6 +10,31 @@ initState(true);
 const tool_names = toolRegistry.list().map(tool => tool.name);
 const depsAgent = createDefaultDeps();
 
+
+type ConfirmDialogProps = {
+    message: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+function ConfirmDialog({message, onConfirm, onCancel} : ConfirmDialogProps) {
+    useInput((input, key) => {
+        if (input === 'y' || key.return || input === "Y") {
+            onConfirm();
+        } else if (input === 'n' || key.escape || input === "N") {
+            onCancel();
+        }
+    });
+
+    return (
+        <Box borderStyle="round" borderColor="yellow" padding={1}>
+            <Text color="yellow">{message} </Text>
+            <Text color="gray">(Y/n)</Text>
+        </Box>
+    )
+}
+
+
 function MessageList(){
     const {messages, streamingText, isLoading} = useAppState();
     let displayMessages = isLoading ? 
@@ -92,11 +117,24 @@ function StatusBar() {
 
 function App({ tool_names }: { tool_names: string[] }) {
 
+    const {pendingConfirmation} = useAppState();
+
     return (
         <Box flexDirection='column'>
             <Text>my-agent</Text>
             <Text>------------------------</Text>
             <MessageList />
+
+            {
+                pendingConfirmation && (
+                    <ConfirmDialog
+                        message={pendingConfirmation.message}
+                        onConfirm={pendingConfirmation.onConfirm}
+                        onCancel={pendingConfirmation.onCancel}
+                    />
+                )
+            }
+
             <Text>------------------------</Text>
             <StatusBar />
         </Box>

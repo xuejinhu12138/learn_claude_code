@@ -72,12 +72,7 @@ switch (positionals[0]) {
             case '':
                 break;
             default:
-                const systemPrompt = buildSystemPrompt({
-                    cwd: process.cwd(),
-                    datetime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
-                    tools: toolRegistry.list(),
-                });
-                deps.addMessage(createSystemMessage(systemPrompt));
+                // 不再手动添加 system 消息，sendMessage 会自动构建
                 await runAgent(answer, deps);
         }
     }

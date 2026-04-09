@@ -1,7 +1,7 @@
 import { printError, printWarning } from "./print";
 import type { Message } from "../types";
 import { estimateHistoryTokens } from "./tokenEstimation";
-
+import { appStore } from "../ui/store";
 
 class CompactWarningChecker {
     private warningThreshold: number;
@@ -16,13 +16,15 @@ class CompactWarningChecker {
     check(messages: Message[]): void {
         const tokenCount = estimateHistoryTokens(messages);
         if (tokenCount > this.warningThreshold && !this.warningIssued) {
-            this.onWarn("消息数量超过警告阈值");
+            this.onWarn("消息数量超过警告阈值");  // 调用回调（测试需要）
             this.warningIssued = true;
+            appStore.set(prev => ({ ...prev, showTokenWarning: true }));  // 更新 UI（界面需要）
         }
     }
 
     reset(): void {
         this.warningIssued = false;
+        appStore.set(prev => ({ ...prev, showTokenWarning: false }));
     }
 }
 

@@ -1,9 +1,9 @@
 # 学习进度追踪表
 
-> **最后更新**：2026-04-08
-> **当前阶段**：Phase 6 — 终端 UI 系统
-> **当前能力点**：P6-7（权限/确认对话框）
-> **总体进度**：56 / 95 能力点（59%）
+> **最后更新**：2026-04-09
+> **当前阶段**：Phase 7 — 命令、技能与交互
+> **当前能力点**：P7-3（CLAUDE.md 加载）✅ 已完成
+> **总体进度**：62 / 95 能力点（65%）
 
 ---
 
@@ -17,8 +17,8 @@
 | 3 | 消息系统与 API 调用 | 9 | 8 | ✅ 完成（P3-9跳过） |
 | 4 | 工具系统 | 9 | 6 | ✅ 完成（P4-6~P4-9跳过/合并） |
 | 5 | Agentic Loop | 9+4扩展 | 9+4 | ✅ 完成 |
-| 6 | 终端 UI 系统 | 10 | 6 | 🔄 进行中 |
-| 7 | 命令、技能与交互 | 8 | 0 | ⬜ 未开始 |
+| 6 | 终端 UI 系统 | 10 | 9 | ✅ 完成（P6-10跳过） |
+| 7 | 命令、技能与交互 | 8 | 0 | 🔄 进行中 |
 | 8 | 持久化与会话管理 | 6 | 0 | ⬜ 未开始 |
 | 9 | 高级工具与 LSP | 5 | 0 | ⬜ 未开始 |
 | 10 | 扩展系统 | 6 | 0 | ⬜ 未开始 |
@@ -123,17 +123,17 @@
 | P6-4 | 消息列表组件 | ✅ 已完成 | 2026-04-08 | MessageList，messages.map → JSX，useAppState 驱动重渲染 |
 | P6-5 | 输入组件 | ✅ 已完成 | 2026-04-08 | StatusBar，useInput 键盘处理，appStore.get() vs useAppState() 区别 |
 | P6-6 | 流式输出组件 | ✅ 已完成 | 2026-04-08 | runAgent 接入 UI，isLoading/streamingText，api.ts 静音改 appStore |
-| P6-7 | 权限/确认对话框 | ⬜ 未开始 | — | — |
-| P6-8 | 状态显示 | ⬜ 未开始 | — | — |
-| P6-9 | 自定义 Hooks | ⬜ 未开始 | — | — |
-| P6-10 | 全屏模式 (Screen) | ⬜ 未开始 | — | — |
+| P6-7 | 权限/确认对话框 | ✅ 已完成 | 2026-04-09 | ConfirmDialog组件+isDangerousCommand+await Promise |
+| P6-8 | 状态显示 | ✅ 已完成 | 2026-04-09 | Spinner动画+currentStatus+TokenWarning+useEffect清理 |
+| P6-9 | 自定义 Hooks | ✅ 已完成 | 2026-04-09 | useInterval+useElapsedTime+闭包陷阱+依赖注入重构api |
+| P6-10 | 全屏模式 (Screen) | ⏭️ 跳过 | — | 复杂度高，选学 |
 
 ## 🔶 Phase 7：命令、技能与交互
 
 | ID | 能力点 | 状态 | 完成日期 | 备注 |
 |----|--------|------|---------|------|
-| P7-1 | 命令注册与分发 | ⬜ 未开始 | — | — |
-| P7-2 | 基础命令实现 | ⬜ 未开始 | — | — |
+| P7-1 | 命令注册与分发 | ✅ 已完成 | 2026-04-09 | CommandRegistry+解析+别名+修复双重历史同步 |
+| P7-2 | 基础命令实现 | ✅ 已完成 | 2026-04-09 | help/clear/exit/compact/cost 五个命令 |
 | P7-3 | CLAUDE.md 加载 | ⬜ 未开始 | — | — |
 | P7-4 | 快捷键系统 | ⬜ 未开始 | — | — |
 | P7-5 | 技能系统概念 | ⬜ 未开始 | — | — |
@@ -223,3 +223,8 @@
 - **2026-04-07**（晚）：Phase 4 完成（6/9，P4-6~P4-9跳过/合并），实现 Tool 接口、ToolRegistry、ReadFile/WriteFile/BashTool + Zod 验证，13 tests pass。详见 `sessions/2026-04-07-03.md`
 - **2026-04-07**（深夜）：Phase 5 P5-1~P5-4 完成，实现完整 Agentic Loop；大量调试（tool_call_id、Promise.all、JSON.parse、模型切换 gemma-4-26b）。详见 `sessions/2026-04-07-04.md`
 - **2026-04-08**：P5-5~P5-9 全部完成（含 P5-6 token budget、P5-7a~e 五子任务），20 tests pass；P6-1~P6-6 完成，实现 Ink UI（Store/useAppState/MessageList/StatusBar/输入/流式输出接 agent），25 tests pass。详见 `sessions/2026-04-08-01.md`
+- **2026-04-09**：P6-7 完成，实现 ConfirmDialog 组件 + 危险命令检测 + await Promise 阻塞等待用户确认，成功拦截 rm 命令，29 tests pass。详见 `sessions/2026-04-09-01.md`
+- **2026-04-09**（下午）：P6-8 完成，实现 Spinner 旋转动画 + 状态显示 + Token 警告，useEffect 正确清理定时器，修复 CompactWarning + 测试隔离，31 tests pass。详见 `sessions/2026-04-09-02.md`
+- **2026-04-09**（晚上）：P6-9 完成，实现 useInterval + useElapsedTime 自定义 Hooks，理解闭包陷阱 + useRef 避免陷阱，重构 api.ts 用依赖注入解决层级倒置，Phase 6 完成（9/10，P6-10跳过）。详见 `sessions/2026-04-09-03.md`
+- **2026-04-09**（深夜）：P7-1+P7-2 完成，实现命令系统（CommandRegistry+解析+别名），5个基础命令（help/clear/exit/compact/cost），修复双重历史同步问题，40 tests pass。详见 `sessions/2026-04-09-04.md`
+- **2026-04-09**（深夜2）：P7-3 完成，理解 Claude Code 系统提示词管理策略（动态构建 vs 存历史），实现 loadProjectInstructions + /reload 命令，api.ts 每次调用时动态读取 CLAUDE.md，40 tests pass。详见 `sessions/2026-04-09-05.md`

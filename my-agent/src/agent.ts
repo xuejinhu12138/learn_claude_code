@@ -10,6 +10,7 @@ import { buildSystemPrompt, type SystemPromptContext } from "./utils/buildSystem
 import { createAutoCompact } from "./utils/autoCompact";
 import { createCompactWarning } from "./utils/compactWarning";
 import { microCompactMessages } from "./utils/microCompactMessages";
+import { appStore } from "./ui/store"
 
 class AgentDeps {
     // deps 只需要包含"有副作用或有外部依赖"的东西（history 操作、API 调用、工具查找）
@@ -39,7 +40,10 @@ class AgentDeps {
     }
 
     sendMessage(messages: Message[]): Promise<SendMessageResult> {
-        return sendMessage(messages);
+        // 传入回调函数，更新 UI
+        return sendMessage(messages, (token, fullText) => {
+            appStore.set(prev => ({ ...prev, streamingText: fullText }));
+        });
     }
 
     // 上下文压缩相关
@@ -59,6 +63,8 @@ function createDefaultDeps(): AgentDeps {
 
 // 用户问题 - AI回答 - 执行工具将结果返回给AI继续让AI回答
 async function runAgent(userInput: string, deps: AgentDeps = createDefaultDeps()): Promise<void> {
+    appStore.set(prev => ({ ...prev, currentStatus: "正在思考..." }));
+
     // 1. 将用户输入添加到历史记录中
     deps.addMessage(createUserMessage(userInput));
     let isContinue = true;
@@ -89,6 +95,7 @@ async function runAgent(userInput: string, deps: AgentDeps = createDefaultDeps()
                 }).join("")}`);
                 await Promise.all(
                     tool_use.map(async ({ id, function: { name, arguments: argsStr } }) => {
+                        appStore.set(prev => ({ ...prev, currentStatus: `正在执行: ${name}` }));
                         const tool = deps.getTool(name);
                         try {
                             const input = JSON.parse(argsStr || "{}");
@@ -125,6 +132,8 @@ async function runAgent(userInput: string, deps: AgentDeps = createDefaultDeps()
         }
     }
     // 表示完成
+    appStore.set(prev => ({ ...prev, currentStatus: undefined }));
+    
     new Promise(resolve => resolve("Agent run completed"));
 }
 

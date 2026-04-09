@@ -42,6 +42,9 @@ type AppState = {
         onConfirm: () => void;
         onCancel: () => void;
     }
+
+    currentStatus?: string    // 当前状态描述
+    showTokenWarning?: boolean // 是否显示Token警告
 }
 
 const appStore = new Store<AppState>({
@@ -51,6 +54,8 @@ const appStore = new Store<AppState>({
     streamingText: "",
 
     pendingConfirmation: undefined,
+    currentStatus: undefined,
+    showTokenWarning: false,
 });
 
 export { appStore, Store };

@@ -25,7 +25,8 @@ describe('测试系统提示词', () => {
         expect(prompt).toContain("当前时间：2024-06-01 12:00:00");
         expect(prompt).toContain("- tool1: 这是工具1");
         expect(prompt).toContain("- tool2: 这是工具2");
-        expect(prompt).toContain("项目记忆：\n这是项目的记忆内容");
+        expect(prompt).toContain("项目记忆");
+        expect(prompt).toContain("这是项目的记忆内容");
 
         // 2. 无 memory 时，输出不包含项目记忆
         const contextWithoutMemory: SystemPromptContext = {
@@ -42,7 +43,7 @@ describe('测试系统提示词', () => {
         expect(promptWithoutMemory).toContain("当前时间：2024-06-01 12:00:00");
         expect(promptWithoutMemory).toContain("- tool1: 这是工具1");
         expect(promptWithoutMemory).toContain("- tool2: 这是工具2");
-        expect(promptWithoutMemory).not.toContain("项目记忆：");
+        expect(promptWithoutMemory).not.toContain("项目记忆");
 
         // 3. 工具列表为空时，正常输出（无工具行）
         const contextWithoutTools: SystemPromptContext = {

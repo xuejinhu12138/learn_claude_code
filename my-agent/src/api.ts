@@ -6,7 +6,8 @@ import type { ChatCompletionContentPart, ChatCompletionMessageParam } from "open
 import { optionalEnv } from "./utils/env"
 import type { ToolCall } from "./types";
 import { toolRegistry } from "./tools/registry"
-import { appStore } from "./ui/store"
+import { buildSystemPrompt } from "./utils/buildSystemPrompt"
+import { loadProjectInstructions } from "./utils/loadProjectInstructions"
 
 function getClient(): OpenAI {
     const client = new OpenAI({
@@ -16,10 +17,37 @@ function getClient(): OpenAI {
     return client;
 }
 
+/**
+ * 流式响应的回调函数类型
+ */
+export type StreamCallback = (token: string, fullText: string) => void;
 
-async function sendMessage(messages: Message[]): Promise<SendMessageResult> {
+/**
+ * 发送消息到 LLM
+ * @param messages 消息历史
+ * @param onToken 可选的流式回调函数，每次收到新 token 时调用
+ */
+async function sendMessage(
+    messages: Message[], 
+    onToken?: StreamCallback
+): Promise<SendMessageResult> {
 
-    const copyMessage = structuredClone(messages);
+    // 每次调用时动态构建系统提示词
+    const projectInstructions = loadProjectInstructions();
+    const systemPrompt = buildSystemPrompt({
+        cwd: process.cwd(),
+        datetime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+        tools: toolRegistry.list(),
+        projectInstructions: projectInstructions || undefined
+    });
+    
+    // 临时添加 system 消息（不存到历史）
+    const messagesWithSystem = [
+        createSystemMessage(systemPrompt),
+        ...messages
+    ];
+
+    const copyMessage = structuredClone(messagesWithSystem);
     const convertMsg = copyMessage as ChatCompletionMessageParam[];
     const client = getClient();
     let text = "";
@@ -54,10 +82,13 @@ async function sendMessage(messages: Message[]): Promise<SendMessageResult> {
             });
 
             text += token;
-            // process.stdout.write(token);
-            appStore.set(prev => ({ ...prev, streamingText: text }));
+            
+            // 通过回调通知外部，不直接依赖 appStore
+            if (onToken) {
+                onToken(token, text);
+            }
         }
-        // process.stdout.write("\n");
+        
         return {
             text,
             stop_reason: finishReason ?? 'error',

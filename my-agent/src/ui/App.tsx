@@ -5,10 +5,62 @@ import { useAppState } from './useAppState';
 import { appStore } from './store';
 import { createDefaultDeps, runAgent } from '../agent';
 import { initState } from '../bootstrap/state';
+import { useEffect, useState } from 'react';
+import { useElapsedTime } from './hooks/useElapsedTime';
+import { commandRegistry } from '../commands/registry';
+import '../commands/index';
+import { buildSystemPrompt } from '../utils/buildSystemPrompt';
+import { createSystemMessage } from '../types';
+import { loadProjectInstructions } from '../utils/loadProjectInstructions';
 
 initState(true);
 const tool_names = toolRegistry.list().map(tool => tool.name);
 const depsAgent = createDefaultDeps();
+const projectInstructions = loadProjectInstructions() || undefined;
+const systemPrompt = buildSystemPrompt({
+    cwd: process.cwd(),
+    datetime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+    tools: toolRegistry.list(),
+    projectInstructions: projectInstructions,
+});
+depsAgent.addMessage(createSystemMessage(systemPrompt));
+
+
+type MessageProps = {
+    message: string;
+    color: string;
+}
+
+function TokenWarningDialog({message, color}: MessageProps) {
+    return (
+        <Box>
+            <Text color={color}>
+                {message}
+            </Text>
+        </Box>
+    )
+}
+
+function Spinner({message, color}: MessageProps) {
+    const icons = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+    const [id,setId] = useState(0);
+    const elapsed = useElapsedTime();
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setId(prev => (prev + 1) % icons.length);
+        },100)
+
+        return () => clearInterval(timer);
+    },[]);
+
+    return (
+        <Box>
+            <Text color={color}>
+                {icons[id]} {message} ({elapsed}s)
+            </Text>
+        </Box>
+    )
+}
 
 
 type ConfirmDialogProps = {
@@ -76,6 +128,31 @@ function StatusBar() {
         if (key.return) {
             if (inputValue.trim() === '') return;  // 空消息不发送
             const currentInput = inputValue;  // 先保存当前输入的值，避免状态更新后丢失
+
+
+            if (commandRegistry.isCommand(currentInput)) {
+                const parsed = commandRegistry.parse(currentInput);
+                if (parsed) {
+                    const command = commandRegistry.get(parsed.name);
+                    if (command) {
+                        // 执行命令，传入 depsAgent
+                        (async () => {
+                            const result = await command.execute(parsed.args, depsAgent);
+                            appStore.set(prev => ({
+                                ...prev,
+                                messages: [
+                                    ...prev.messages,
+                                    { role: 'user' as const, text: currentInput },
+                                    { role: 'assistant' as const, text: result }
+                                ],
+                                inputValue: ""
+                            }));
+                        })();
+                        return;
+                    }
+                }
+            }
+
             appStore.set(prev => ({
                 ...prev,
                 messages: [...prev.messages, { role: 'user' as const, text: currentInput }],
@@ -117,7 +194,7 @@ function StatusBar() {
 
 function App({ tool_names }: { tool_names: string[] }) {
 
-    const {pendingConfirmation} = useAppState();
+    const {pendingConfirmation, currentStatus, showTokenWarning} = useAppState();
 
     return (
         <Box flexDirection='column'>
@@ -135,7 +212,20 @@ function App({ tool_names }: { tool_names: string[] }) {
                 )
             }
 
+            {
+                currentStatus && (
+                    <Spinner message={currentStatus} color="cyan" />
+                )
+            }
+
             <Text>------------------------</Text>
+
+            {
+                showTokenWarning && (
+                    <TokenWarningDialog message='当前上下文占用过多，即将进行上下文压缩' color='cyan'></TokenWarningDialog>
+                )
+            }
+
             <StatusBar />
         </Box>
     );

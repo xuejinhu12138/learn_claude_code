@@ -1,7 +1,7 @@
 import { addMessage, clearHistory } from "./history";
 import { sendMessage } from "./api";
 import { getHistory } from "./history";
-import { createAssistantMessage, createSystemMessage, createToolMessage, createUserMessage, type Message, type SendMessageResult } from "./types";
+import { createAssistantMessage, createSystemMessage, createToolMessage, createUserMessage, type Message, type SendMessageResult, type ToolCall } from "./types";
 import { toolRegistry } from "./tools/registry";
 import { printDebug, printError } from "./utils/print";
 import { COMPACT_TAIL_SIZE, COMPACT_THRESHOLD, COMPACT_TOKEN_THRESHOLD, COMPACT_WARNING_THRESHOLD, COMPACT_WARNING_TOKEN_THRESHOLD, MAX_TOOL_RESULT_CHARS, MAX_TURNS } from "./constants";
@@ -11,13 +11,202 @@ import { createAutoCompact } from "./utils/autoCompact";
 import { createCompactWarning } from "./utils/compactWarning";
 import { microCompactMessages } from "./utils/microCompactMessages";
 import { appStore } from "./ui/store"
+import type { SessionEntry } from "./types/session";
+import { sessionStorage } from "./session/storage";
+import { uuid } from "zod";
 
 class AgentDeps {
     // deps 只需要包含"有副作用或有外部依赖"的东西（history 操作、API 调用、工具查找）
     private conversation: Message[] = [];
+    private sessionId: string;
 
+    constructor(sessionId?: string) {
+        if (sessionId) {
+            // 恢复现有会话
+            this.sessionId = sessionId;
+            const entries = sessionStorage.loadTranscript(sessionId);
+            this.conversation = this.entriesToMessages(entries);
+            console.log(`[Agent] 恢复会话 ${sessionId}，加载了 ${this.conversation.length} 条消息`);
+        } else {
+            // 创建新会话
+            this.sessionId = this.generateUuid();
+            sessionStorage.createSession(this.sessionId);
+            console.log(`[Agent] 创建新会话 ${this.sessionId}`);
+        }
+    }
+
+    loadSession(sessionId: string): void {
+        this.sessionId = sessionId;
+        this.conversation = this.entriesToMessages(sessionStorage.loadTranscript(sessionId));
+        console.log(`[Agent] 恢复会话 ${sessionId}，加载了 ${this.conversation.length} 条消息`);
+    }
+
+    // 辅助方法：生成 UUID
+    private generateUuid(): string {
+        return crypto.randomUUID();
+    }
+
+    private messageToEntry(message: Message): SessionEntry[] {
+        const entries: SessionEntry[] = [];
+        const timestamp = new Date().toISOString();
+        
+        switch (message.role) {
+            case 'user':
+                // User 消息：只有一个文本内容
+                entries.push({
+                    type: 'user',
+                    content: message.content.map(c => c.text).join('\n'),
+                    uuid: this.generateUuid(),
+                    timestamp,
+                });
+                break;
+                
+            case 'assistant':
+                // Assistant 消息：可能有文本 + 工具调用
+                
+                // 1. 如果有文本内容，生成 AssistantEntry
+                const textContent = message.content.map(c => c.text).join('\n').trim();
+                if (textContent) {
+                    entries.push({
+                        type: 'assistant',
+                        content: textContent,
+                        uuid: this.generateUuid(),
+                        timestamp,
+                    });
+                }
+                
+                // 2. 如果有工具调用，每个生成一个 ToolUseEntry
+                if (message.tool_calls) {
+                    for (const toolCall of message.tool_calls) {
+                        entries.push({
+                            type: 'tool_use',
+                            tool: toolCall.function.name,
+                            input: JSON.parse(toolCall.function.arguments),
+                            tool_use_id: toolCall.id,
+                            uuid: this.generateUuid(),
+                            timestamp,
+                        });
+                    }
+                }
+                break;
+                
+            case 'tool':
+                // Tool 消息：工具执行结果
+                if (!message.tool_call_id) {
+                    throw new Error('Tool message must have tool_call_id');
+                }
+                
+                entries.push({
+                    type: 'tool_result',
+                    tool_use_id: message.tool_call_id,
+                    output: message.content.map(c => c.text).join('\n'),
+                    is_error: false,
+                    uuid: this.generateUuid(),
+                    timestamp,
+                });
+                break;
+                
+            case 'system':
+                // System 消息通常不持久化（因为每次都动态生成）
+                // 但如果需要，可以用 UserEntry 的格式存储
+                entries.push({
+                    type: 'user',  // 用 user 类型存储 system 消息
+                    content: `[SYSTEM] ${message.content.map(c => c.text).join('\n')}`,
+                    uuid: this.generateUuid(),
+                    timestamp,
+                });
+                break;
+                
+            default:
+                throw new Error(`Unknown message role: ${message.role}`);
+        }
+        
+        return entries;
+    }
+
+    private entriesToMessages(entries: SessionEntry[]): Message[] {
+        const messages: Message[] = [];
+        let pendingAssistantText: string | undefined;
+        let pendingToolCalls: ToolCall[] = [];
+        
+        for (const entry of entries) {
+            switch (entry.type) {
+                case 'user':
+                    // 如果有待处理的 assistant 消息，先推入
+                    if (pendingAssistantText || pendingToolCalls.length > 0) {
+                        messages.push(createAssistantMessage(
+                            pendingAssistantText || '',
+                            pendingToolCalls.length > 0 ? pendingToolCalls : undefined
+                        ));
+                        pendingAssistantText = undefined;
+                        pendingToolCalls = [];
+                    }
+                    
+                    // 推入 user 消息
+                    messages.push(createUserMessage(entry.content));
+                    break;
+                    
+                case 'assistant':
+                    // 暂存 assistant 文本（可能后面还有 tool_use）
+                    pendingAssistantText = entry.content;
+                    break;
+                    
+                case 'tool_use':
+                    // 收集工具调用
+                    pendingToolCalls.push({
+                        id: entry.tool_use_id,
+                        type: 'function',
+                        function: {
+                            name: entry.tool,
+                            arguments: JSON.stringify(entry.input)
+                        }
+                    });
+                    break;
+                    
+                case 'tool_result':
+                    // 如果有待处理的 assistant，先推入
+                    if (pendingAssistantText !== undefined || pendingToolCalls.length > 0) {
+                        messages.push(createAssistantMessage(
+                            pendingAssistantText || '',
+                            pendingToolCalls.length > 0 ? pendingToolCalls : undefined
+                        ));
+                        pendingAssistantText = undefined;
+                        pendingToolCalls = [];
+                    }
+                    
+                    // 推入 tool 结果
+                    messages.push(createToolMessage(entry.tool_use_id, entry.output));
+                    break;
+            }
+        }
+        
+        // 处理最后的待处理消息
+        if (pendingAssistantText !== undefined || pendingToolCalls.length > 0) {
+            messages.push(createAssistantMessage(
+                pendingAssistantText || '',
+                pendingToolCalls.length > 0 ? pendingToolCalls : undefined
+            ));
+        }
+        
+        return messages;
+    }
+    
+
+    private persistMessage(message: Message): void {
+        // 将 Message 转换为 SessionEntry 数组
+        const entries: SessionEntry[] = this.messageToEntry(message);
+        
+        // 追加所有 Entry 到 JSONL
+        for (const entry of entries) {
+            sessionStorage.appendEntry(this.sessionId, entry);
+        }
+    }
+    
     addMessage(message: Message): void {
         this.conversation.push(message);
+
+        // 持久化到文件
+        this.persistMessage(message);
     }
 
     getHistory(): Message[] {

@@ -135,20 +135,56 @@ function StatusBar() {
                 if (parsed) {
                     const command = commandRegistry.get(parsed.name);
                     if (command) {
-                        // 执行命令，传入 depsAgent
-                        (async () => {
-                            const result = await command.execute(parsed.args, depsAgent);
-                            appStore.set(prev => ({
-                                ...prev,
-                                messages: [
-                                    ...prev.messages,
-                                    { role: 'user' as const, text: currentInput },
-                                    { role: 'assistant' as const, text: result }
-                                ],
-                                inputValue: ""
-                            }));
-                        })();
-                        return;
+                        if (command.type === 'action') {
+                            // 执行命令，传入 depsAgent
+                            (async () => {
+                                const result = await command.execute!(parsed.args, depsAgent);
+                                appStore.set(prev => ({
+                                    ...prev,
+                                    messages: [
+                                        ...prev.messages,
+                                        { role: 'user' as const, text: currentInput },
+                                        { role: 'assistant' as const, text: result }
+                                    ],
+                                    inputValue: ""
+                                }));
+                            })();
+                            return;
+                        } else if (command.type === 'prompt') {
+                            // 技能命令：生成提示词 + 发送给 AI
+                            (async () => {
+                                // 1. 生成提示词
+                                const promptContent = await command.getPromptForCommand!(parsed.args);
+                                
+                                // 2. 显示用户输入
+                                appStore.set(prev => ({
+                                    ...prev,
+                                    messages: [
+                                        ...prev.messages,
+                                        { role: 'user' as const, text: currentInput }
+                                    ],
+                                    inputValue: "",
+                                    isLoading: true,
+                                    streamingText: ""
+                                }));
+                                
+                                // 3. 将提示词发送给 AI
+                                await runAgent(promptContent, depsAgent);
+                                
+                                // 4. 显示 AI 响应
+                                const assistantMessages = depsAgent.getHistory().filter(msg => msg.role === 'assistant');
+                                const lastAssistantMsg = assistantMessages[assistantMessages.length - 1]?.content[0]?.text;
+                                if (lastAssistantMsg) {
+                                    appStore.set(prev => ({
+                                        ...prev,
+                                        messages: [...prev.messages, { role: 'assistant' as const, text: lastAssistantMsg }],
+                                        isLoading: false,
+                                        streamingText: ""
+                                    }));
+                                }
+                            })();
+                            return;
+                        }
                     }
                 }
             }

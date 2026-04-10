@@ -6,6 +6,7 @@ import type { AgentDeps } from "../agent";
 export const clearCommand: Command = {
     name: 'clear',
     description: '清空对话历史',
+    type: 'action',
     async execute(args: string, deps?: AgentDeps): Promise<string> {
         // 清空 UI 消息
         appStore.set(prev => ({ ...prev, messages: [] }));

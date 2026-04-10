@@ -5,6 +5,7 @@ import { join } from "path";
 
 export const reloadCommand: Command = {
     name: 'reload',
+    type: 'action',
     description: '重新加载 CLAUDE.md 项目指令',
     async execute(args: string): Promise<string> {
         const filePath = join(process.cwd(), 'CLAUDE.md');

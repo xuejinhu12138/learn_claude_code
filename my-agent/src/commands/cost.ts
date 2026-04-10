@@ -6,6 +6,7 @@ export const costCommand: Command = {
     name: 'cost',
     description: '显示当前会话的 Token 使用情况',
     aliases: ['tokens'],
+    type: 'action',
     async execute(args: string, deps?: AgentDeps): Promise<string> {
         if (!deps) {
             return '错误：无法访问 Agent';

@@ -4,7 +4,17 @@ type Command = {
     name: string;
     description: string;
     aliases?: string[];
-    execute: (args: string, deps?: AgentDeps) => Promise<string>;
+
+    // 命令类型：action=传统命令，prompt=技能命令
+    type: 'action' | 'prompt';
+
+    // 技能相关字段
+    whenToUse?: string;         // 何时使用（给 AI 看）
+    argumentHint?: string;      // 参数提示（如：<问题描述>）
+    
+    execute?: (args: string, deps?: AgentDeps) => Promise<string>;
+
+    getPromptForCommand?: (args: string, deps?: AgentDeps) => Promise<string>;
 };
 
 class CommandRegistry {
@@ -12,6 +22,16 @@ class CommandRegistry {
 
     // 注册命令
     register(command: Command): void {
+        // 验证：action 类型必须有 execute
+        if (command.type === 'action' && !command.execute) {
+            throw new Error(`Action command "${command.name}" must have execute function`);
+        }
+
+        // 验证：prompt 类型必须有 getPromptForCommand
+        if (command.type === 'prompt' && !command.getPromptForCommand) {
+            throw new Error(`Prompt command "${command.name}" must have getPromptForCommand function`);
+        }
+
         // 同时注册 name 和 aliases
         if (this.get(command.name)){
             return;

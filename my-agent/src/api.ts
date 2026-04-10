@@ -8,6 +8,9 @@ import type { ToolCall } from "./types";
 import { toolRegistry } from "./tools/registry"
 import { buildSystemPrompt } from "./utils/buildSystemPrompt"
 import { loadProjectInstructions } from "./utils/loadProjectInstructions"
+// import { skillRegistry } from "./skills/registry"
+import { commandRegistry } from "./commands/registry"
+import { loadMemoryIndex } from "./memory/loader"
 
 function getClient(): OpenAI {
     const client = new OpenAI({
@@ -34,12 +37,28 @@ async function sendMessage(
 
     // 每次调用时动态构建系统提示词
     const projectInstructions = loadProjectInstructions();
+
+    // 加载记忆
+    const memoryContent = loadMemoryIndex();
+
+    const allCommands = commandRegistry.list();
+    const skillCommands = allCommands.filter(cmd => cmd.type === 'prompt');
+    const skills = skillCommands.map(cmd => ({
+        name: cmd.name,
+        description: cmd.description,
+        whenToUse: cmd.whenToUse,
+        aliases: cmd.aliases
+    }));
     const systemPrompt = buildSystemPrompt({
         cwd: process.cwd(),
         datetime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
         tools: toolRegistry.list(),
-        projectInstructions: projectInstructions || undefined
+        projectInstructions: projectInstructions || undefined,
+        skills,
+        memory: memoryContent || undefined
     });
+
+    // console.log(systemPrompt);
     
     // 临时添加 system 消息（不存到历史）
     const messagesWithSystem = [
